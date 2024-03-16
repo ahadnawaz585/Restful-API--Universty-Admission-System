@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  fatherName         String
+  picture            String
+  age                Int
+  dob                DateTime
+  citizen            String
+  religion           String
+  address            String
+  applications       Application[]
+  previousEducations PreviousEducation[]
+  ContactInformation studentInformation?
+}
+
+model PreviousEducation {
+  id             Int     @id @default(autoincrement())
+  schoolName     String
+  schoolProgram  String
+  schoolMarks    Float
+  collegeName    String
+  collegeProgram String
+  collegeMarks   Float
+  studentId      Int
+  student        Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model studentInformation {
+  id        Int     @id @default(autoincrement())
+  phone     String
+  email     String
+  address   String
+  studentId Int     @unique
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model LevelOfEducation {
+  id                        Int       @id @default(autoincrement())
+  levelName                 String
+  mandatoryYearsOfEducation Int
+  programs                  Program[]
+}
+
+model Program {
+  id                        Int                     @id @default(autoincrement())
+  programName               String
+  levelOfEducationId        Int
+  academicCertificateId     Int
+  programFee                Int
+  minimumMarksRequired      Float
+  academicCertificate       AcademicCertificate @relation(fields: [academicCertificateId], references: [id])
+  preferences               ApplicationPreference[]
+  levelOfEducation          LevelOfEducation        @relation(fields: [levelOfEducationId], references: [id])
+}
+
+
+model AcademicCertificate {
+  id              Int           @id @default(autoincrement())
+  certificateName String
+  programs        Program[]     // Add this line for the opposite relation
+}
+
+model Application {
+  id                         Int                        @id @default(autoincrement())
+  studentId                  Int
+  applicationDate            DateTime
+  applicationFee             Float
+  status                     String
+   student                   Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  applicationPayments        ApplicationPayment[]
+  applicationStatusHistories ApplicationStatusHistory[]
+  preferences                ApplicationPreference[]    // Add this line for the opposite relation
+}
+
+model UniversityAdmin {
+  id              Int                        @id @default(autoincrement())
+  name            String
+  statusHistories ApplicationStatusHistory[]
+}
+
+model ApplicationStatusHistory {
+  id            Int              @id @default(autoincrement())
+  applicationId Int
+  statusFrom    String
+  statusTo      String
+  dateOfChange  DateTime
+  adminId       Int?
+  admin         UniversityAdmin? @relation(fields: [adminId], references: [id])
+  application   Application      @relation(fields: [applicationId], references: [id],onDelete: Cascade)
+}
+
+model ApplicationPayment {
+  id            Int         @id @default(autoincrement())
+  applicationId Int
+  paymentDate   DateTime
+  bankName      String
+  amountPaid    Float
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model ApplicationPreference {
+  id            Int         @id @default(autoincrement())
+  applicationId Int
+  programId     Int
+  priority      Int
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  program       Program     @relation(fields: [programId], references: [id])
+
+  @@unique([applicationId, priority])
+}
+                                          
